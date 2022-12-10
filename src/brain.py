@@ -2,6 +2,10 @@ import urllib
 from selenium.webdriver.common.by import By
 from .course import Course
 import requests
+import json
+import time
+
+from yt_dlp import YoutubeDL
 
 class Brain:
     links_array = []
@@ -55,6 +59,7 @@ class Brain:
             
             driver.find_element(By.ID, "email").send_keys(credentails['email'])
             driver.find_element(By.ID, "password").send_keys(credentails['password'])
+            time.sleep(4)
             driver.find_element(By.CLASS_NAME, "login-button").click()
         
         
@@ -67,16 +72,13 @@ class Brain:
         def get_rid_of_special_characters(element: str) -> str:
             return "".join([x for x in element if x not in "/><:\"#\\|?!*,%[].'';:"])
         
-        driver.get(link)
-        driver.implicitly_wait(10)
-        
         course_name = driver.find_element(By.TAG_NAME, "h1").get_attribute('innerHTML')
         
         course_time = driver.find_element(By.CLASS_NAME, "CourseOverviewItemAmount-sc-11d3cub-4").get_attribute('innerHTML')
         course_time = course_time[:course_time.find('<')] + 'hours'
         course_time = get_rid_of_special_characters(course_time)
         
-        #
+        #! Link, is necessary
         course = Course(name=course_name, time=course_name, link=link)
         
         driver.implicitly_wait(3)
@@ -122,5 +124,74 @@ class Brain:
             
             for lecture in course.all_courses[course_name][section]:
                 print('\t',lecture.name, lecture.time)
+                
+    def download_videos(self, driver):
+        
+        driver.find_element(By.ID, "overlayPlayButton").click()
+        # driver.implicitly_wait(5)
+        time.sleep(5)
+
+
+        logs = driver.get_log("performance")
+    
+        # Opens a writable JSON file and writes the logs in it
+        with open("network_log.json", "w", encoding="utf-8") as f:
+            f.write("[")
+    
+            # Iterates every logs and parses it using JSON
+            for log in logs:
+                network_log = json.loads(log["message"])["message"]
+    
+                # Checks if the current 'method' key has any
+                # Network related value.
+                if("Network.response" in network_log["method"]
+                        or "Network.request" in network_log["method"]
+                        or "Network.webSocket" in network_log["method"]):
+    
+                    # Writes the network log to a JSON file by
+                    # converting the dictionary to a JSON string
+                    # using json.dumps().
+                    f.write(json.dumps(network_log)+",")
+            f.write("{}]")
+    
+        #print("Written json file")
+    
+        # Read the JSON File and parse it using
+        # json.loads() to find the urls containing images.
+        json_file_path = "network_log.json"
+        with open(json_file_path, "r", encoding="utf-8") as f:
+            logs = json.loads(f.read())
+    
+        # Iterate the logs
+        for log in logs:
+    
+            # Except block will be accessed if any of the
+            # following keys are missing.
+            try:
+                # URL is present inside the following keys
+                url = log["params"]["request"]["url"]
+                # print(url)
+                #print(url+"\n" if "master" in url and "metrics" not in url else "", end="")
+                # Checks if the extension is .png or .jpg
+                if "master" in url and "metrics" not in url and "manifest" in url:
+                    #print(url, end='\n')
+                    # mp3u8_file = url
+                    # print(url)
+                    break
+                
+                if "master" in url and "origin" in url and "token" in url:
+                    m3u8_file = url
+            except Exception as e:
+                pass
+            
+        ydl_opts = {"outtmpl": "video10"+".%(ext)s", 
+                    # 'm3u8': 'ffmpeg', 
+                    # "ffmpeg_location": "C:\\yt-dlp\\ffmpeg.exe", 
+                    # "prefer_ffmpeg": True, 
+                    "format": "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best"
+                    }
+        with YoutubeDL(ydl_opts) as ydl:
+            ydl.download(m3u8_file)
+
 
 
