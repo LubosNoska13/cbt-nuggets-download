@@ -4,6 +4,7 @@ from .course import Course
 
 
 class Brain:
+    links_array = []
     
     def __init__(self):
         self.is_internet_connection()
@@ -14,6 +15,25 @@ class Brain:
         except:
             raise Exception("You don't have internet connection!")
         
+    def get_course_links(self) -> bool:
+        with open("course_links.txt", 'r') as file:
+            n_links = 0
+            file_content = file.read().splitlines()
+            for url in file_content:
+                
+                if "http" in url or "https" in url:
+                    n_links += 1
+                    self.links_array.append(url)
+                elif set(url) == set(' ') or url == '':
+                    pass
+                else:
+                    print(url)
+                    raise Exception("Something is wrong with the url address!")
+                
+            if n_links == 0:
+                raise Exception("File 'course_links.txt' is empty!")
+                
+        return True
     
     def get_html_information(self, driver):
         
