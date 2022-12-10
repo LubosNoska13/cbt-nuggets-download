@@ -20,7 +20,9 @@ def download_course():
     
     for link in brain.links_array:
         driver.get(link)
-        brain.get_html_information(driver)
+        
+        brain.log_in_to_website(link=link)
+        brain.get_html_information(driver=driver)
     
     
     driver.quit()

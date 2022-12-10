@@ -1,7 +1,7 @@
 import urllib
 from selenium.webdriver.common.by import By
 from .course import Course
-
+import requests
 
 class Brain:
     links_array = []
@@ -34,6 +34,27 @@ class Brain:
                 raise Exception("File 'course_links.txt' is empty!")
                 
         return True
+    
+    def log_in_to_website(self, link):
+        
+        def valid_url_address():
+            r = requests.get(link)
+            response = r.status_code
+            
+            if 200 <= response <= 299:
+                pass
+            else:
+                raise Exception(f"[{response} Error]: {link}")
+                
+            return True 
+        
+        def log_in():
+            pass
+        
+        
+        if valid_url_address():
+            log_in()
+        
     
     def get_html_information(self, driver):
         
