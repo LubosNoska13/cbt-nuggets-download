@@ -19,10 +19,8 @@ def download_course():
     brain.get_course_links()
     
     for link in brain.links_array:
-        driver.get(link)
-        
-        brain.log_in_to_website(link=link)
-        brain.get_html_information(driver=driver)
+        brain.log_in_to_website(link=link, credentails={'email': 'as@xas', 'password': 'ascas'}, driver=driver)
+        brain.get_html_information(driver=driver, link=link)
     
     
     driver.quit()

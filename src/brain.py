@@ -9,7 +9,7 @@ class Brain:
     def __init__(self):
         self.is_internet_connection()
     
-    def is_internet_connection(self, host="http://google.com"):
+    def is_internet_connection(self, host: str="http://google.com"):
         try:
             urllib.request.urlopen(host)
         except:
@@ -19,6 +19,7 @@ class Brain:
         with open("course_links.txt", 'r') as file:
             n_links = 0
             file_content = file.read().splitlines()
+            
             for url in file_content:
                 
                 if "http" in url or "https" in url:
@@ -35,12 +36,12 @@ class Brain:
                 
         return True
     
-    def log_in_to_website(self, link):
+    def log_in_to_website(self, link: str, credentails: dict, driver):
         
         def valid_url_address():
             r = requests.get(link)
             response = r.status_code
-            
+
             if 200 <= response <= 299:
                 pass
             else:
@@ -48,20 +49,27 @@ class Brain:
                 
             return True 
         
-        def log_in():
-            pass
+        def log_in(log_in_website: str="https://www.cbtnuggets.com/login"):
+            driver.get(log_in_website)
+            driver.implicitly_wait(10)
+            
+            driver.find_element(By.ID, "email").send_keys(credentails['email'])
+            driver.find_element(By.ID, "password").send_keys(credentails['password'])
+            driver.find_element(By.CLASS_NAME, "login-button").click()
         
         
         if valid_url_address():
             log_in()
         
     
-    def get_html_information(self, driver):
+    def get_html_information(self, driver, link):
         
         def get_rid_of_special_characters(element: str) -> str:
             return "".join([x for x in element if x not in "/><:\"#\\|?!*,%[].'';:"])
         
-
+        driver.get(link)
+        driver.implicitly_wait(10)
+        
         course_name = driver.find_element(By.TAG_NAME, "h1").get_attribute('innerHTML')
         
         course_time = driver.find_element(By.CLASS_NAME, "CourseOverviewItemAmount-sc-11d3cub-4").get_attribute('innerHTML')
@@ -69,9 +77,9 @@ class Brain:
         course_time = get_rid_of_special_characters(course_time)
         
         #
-        course = Course(name=course_name, time=course_name, link='https://www.cbtnuggets.com/it-training/linux/lpic-1')
+        course = Course(name=course_name, time=course_name, link=link)
         
-        driver.implicitly_wait(10)
+        driver.implicitly_wait(3)
 
         all_sections = driver.find_elements(By.CLASS_NAME, "SkillListItem-sc-pqcd25-1")
         
@@ -106,7 +114,9 @@ class Brain:
                 lecture_idx += 1
                 
                 course.add_lecture(section_instance=section_instance, lecture_name=f"{lecture_idx}-{lecture_name}", lecture_time=lecture_time_str)
-                
+            
+            driver.implicitly_wait(3)
+            
         for section in course.all_courses[course_name]:
             print(section.name, section.time)
             
