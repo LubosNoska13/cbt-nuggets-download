@@ -151,6 +151,20 @@ class Brain:
                 if section == section_instance:
                     section.time = section_time
                 
+                
+    def create_file_structure(self):
+        
+        path = "Courses\\"
+        for course in Course.current_course.keys():
+            print(course.name, course.time)
+            
+            for section in Course.current_course[course]:
+                print(section.name, section.time)
+                
+                for lecture in Course.current_course[course][section]:
+                    print('\t',lecture.name, lecture.time)
+        
+        
     
     def download_videos(self, driver):
         
