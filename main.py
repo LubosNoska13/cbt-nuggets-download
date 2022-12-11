@@ -17,9 +17,9 @@ def download_course():
     
     brain = Brain()
     brain.get_course_links()
+    brain.log_in_to_website(credentails={'email': 'martin@xas', 'password': 'ascas'}, driver=driver)
     
     for link in brain.links_array:
-        brain.log_in_to_website(link=link, credentails={'email': 'martin@xas', 'password': 'ascas'}, driver=driver)
         
         driver.get(link)
         driver.implicitly_wait(5)

@@ -43,7 +43,7 @@ class Lecture(CourseSkeleton):
 # course.add_lecture(section, 'lecture2', '10min')
 
 
-# section = course.add_section('section2', '2h30min')
+# section2 = course.add_section('section2', '2h30min')
 # course.add_lecture(section, 'lecture1', '8min')
 # course.add_lecture(section, 'lecture2', '1min')
 
@@ -56,10 +56,12 @@ class Lecture(CourseSkeleton):
 
 
 
-# print(course.all_courses)
+# for section in course.all_courses['Linux'].keys():
+#     if section == section2:
+#         section.time = '30h50min'
 
 # for section in course.all_courses['Linux']:
 #     print(section.name, section.time)
     
-#     for lecture in course.all_courses['Linux'][section]:
-#         print(lecture.name, lecture.time)
+    # for lecture in course.all_courses['Linux'][section]:
+    #     print(lecture.name, lecture.time)

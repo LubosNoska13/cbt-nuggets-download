@@ -18,8 +18,24 @@ class Brain:
             urllib.request.urlopen(host)
         except:
             raise Exception("You don't have internet connection!")
+    
+    def validate_url_address(self, link: str) -> bool:
+        
+        try:
+            r = requests.get(link)
+            
+        except Exception as e:
+            raise ConnectionError(f"Someting is wrong with the url or server!\nurl: {link}")
+        
+        response = r.status_code
+        if 200 <= r.status_code <= 299:
+            return True
+        else:
+            raise Exception(f"[{response} Error]: {link}")
+        
         
     def get_course_links(self) -> bool:
+        
         with open("course_links.txt", 'r') as file:
             n_links = 0
             file_content = file.read().splitlines()
@@ -27,8 +43,9 @@ class Brain:
             for url in file_content:
                 
                 if "http" in url or "https" in url:
-                    n_links += 1
-                    self.links_array.append(url)
+                    if self.validate_url_address(link=url):
+                        n_links += 1
+                        self.links_array.append(url)
                 elif set(url) == set(' ') or url == '':
                     pass
                 else:
@@ -40,37 +57,34 @@ class Brain:
                 
         return True
     
-    def log_in_to_website(self, link: str, credentails: dict, driver):
+    def log_in_to_website(self, credentails: dict, driver, log_in_link: str="https://www.cbtnuggets.com/login"):
         
-        def valid_url_address():
-            r = requests.get(link)
-            response = r.status_code
+        driver.get(log_in_link)
+        driver.implicitly_wait(10)
+        
+        driver.find_element(By.ID, "email").send_keys(credentails['email'])
+        driver.find_element(By.ID, "password").send_keys(credentails['password'])
+        time.sleep(4)
+        driver.find_element(By.CLASS_NAME, "login-button").click()
 
-            if 200 <= response <= 299:
-                pass
-            else:
-                raise Exception(f"[{response} Error]: {link}")
-                
-            return True 
-        
-        def log_in(log_in_website: str="https://www.cbtnuggets.com/login"):
-            driver.get(log_in_website)
-            driver.implicitly_wait(10)
-            
-            driver.find_element(By.ID, "email").send_keys(credentails['email'])
-            driver.find_element(By.ID, "password").send_keys(credentails['password'])
-            time.sleep(4)
-            driver.find_element(By.CLASS_NAME, "login-button").click()
-        
-        
-        if valid_url_address():
-            log_in()
-        
     
-    def get_html_information(self, driver, link):
+    def get_html_information(self, driver, link: str):
         
         def get_rid_of_special_characters(element: str) -> str:
             return "".join([x for x in element if x not in "/><:\"#\\|?!*,%[].'';:"])
+        
+        def get_better_time(time: int) -> str:
+            better_time = ''
+            if time // 60 != 0:
+                better_time += f"{time // 60}h"
+            if time % 60 != 0:
+                better_time += f"{time % 60}m"
+            return better_time
+        
+        if self.validate_url_address(link=link):
+            pass
+        
+        driver.implicitly_wait(5)
         
         course_name = driver.find_element(By.TAG_NAME, "h1").get_attribute('innerHTML')
         
@@ -109,6 +123,8 @@ class Brain:
                 
                 lecture_time_str = lecture.find_element(By.TAG_NAME, "div").get_attribute("innerHTML")[1:-1].replace(' ','')
                 lecture_time_str = get_rid_of_special_characters(lecture_time_str)
+                if "min" not in lecture_time_str:
+                    lecture_time_str += 'n'
                 
                 lecture_time = int(lecture_time_str[:lecture_time_str.find('m')])
                 
@@ -117,14 +133,22 @@ class Brain:
                 
                 course.add_lecture(section_instance=section_instance, lecture_name=f"{lecture_idx}-{lecture_name}", lecture_time=lecture_time_str)
             
+            section_time = get_better_time(section_time)
+            
+            for section in course.all_courses[course_name].keys():
+                if section == section_instance:
+                    section.time = section_time
+                    
             driver.implicitly_wait(3)
             
+        # Print 
         for section in course.all_courses[course_name]:
             print(section.name, section.time)
             
             for lecture in course.all_courses[course_name][section]:
                 print('\t',lecture.name, lecture.time)
                 
+        
     def download_videos(self, driver):
         
         driver.find_element(By.ID, "overlayPlayButton").click()
@@ -170,21 +194,14 @@ class Brain:
             try:
                 # URL is present inside the following keys
                 url = log["params"]["request"]["url"]
-                # print(url)
-                #print(url+"\n" if "master" in url and "metrics" not in url else "", end="")
-                # Checks if the extension is .png or .jpg
-                if "master" in url and "metrics" not in url and "manifest" in url:
-                    #print(url, end='\n')
-                    # mp3u8_file = url
-                    # print(url)
-                    break
                 
                 if "master" in url and "origin" in url and "token" in url:
                     m3u8_file = url
+                    
             except Exception as e:
                 pass
             
-        ydl_opts = {"outtmpl": "video10"+".%(ext)s", 
+        ydl_opts = {"outtmpl": "video1"+".%(ext)s", 
                     # 'm3u8': 'ffmpeg', 
                     # "ffmpeg_location": "C:\\yt-dlp\\ffmpeg.exe", 
                     # "prefer_ffmpeg": True, 
