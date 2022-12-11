@@ -3,7 +3,7 @@
 #! Represation
 
 class CourseSkeleton:
-    all_courses = {}
+    current_course = {}
     
     def __init__(self, name: str, time: str) -> None:
         self.name = name
@@ -17,16 +17,16 @@ class Course(CourseSkeleton):
         self.add_course()
     
     def add_course(self):
-        self.all_courses[self.name] = {}
+        self.current_course[self] = {}
         
     def add_section(self, section_name, section_time):
         section_instance = Section(section_name, section_time)
-        self.all_courses[self.name][section_instance] = []
+        self.current_course[self][section_instance] = []
         return section_instance
         
     def add_lecture(self, section_instance, lecture_name, lecture_time):
         lecture = Lecture(lecture_name, lecture_time)
-        self.all_courses[self.name][section_instance].append(lecture)
+        self.current_course[self][section_instance].append(lecture)
         
         
 class Section(CourseSkeleton):

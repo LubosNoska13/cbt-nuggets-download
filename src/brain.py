@@ -4,6 +4,7 @@ from .course import Course
 import requests
 import json
 import time
+import os
 
 from yt_dlp import YoutubeDL
 
@@ -88,12 +89,15 @@ class Brain:
         
         course_name = driver.find_element(By.TAG_NAME, "h1").get_attribute('innerHTML')
         
-        course_time = driver.find_element(By.CLASS_NAME, "CourseOverviewItemAmount-sc-11d3cub-4").get_attribute('innerHTML')
-        course_time = course_time[:course_time.find('<')] + 'hours'
-        course_time = get_rid_of_special_characters(course_time)
+        # course_time = driver.find_element(By.CLASS_NAME, "CourseOverviewItemAmount-sc-11d3cub-4").get_attribute('innerHTML')
+        # course_time = course_time[:course_time.find('<')] + 'hours'
+        # course_time = get_rid_of_special_characters(course_time)
         
         #! Link, is necessary
-        course = Course(name=course_name, time=course_name, link=link)
+        Course.current_course = {}
+        course_time = 0
+        
+        course = Course(name=course_name, time='', link=link)
         
         driver.implicitly_wait(3)
 
@@ -129,26 +133,25 @@ class Brain:
                 lecture_time = int(lecture_time_str[:lecture_time_str.find('m')])
                 
                 section_time += lecture_time
+                course_time += lecture_time
                 lecture_idx += 1
                 
                 course.add_lecture(section_instance=section_instance, lecture_name=f"{lecture_idx}-{lecture_name}", lecture_time=lecture_time_str)
             
             section_time = get_better_time(section_time)
-            
-            for section in course.all_courses[course_name].keys():
-                if section == section_instance:
-                    section.time = section_time
-                    
             driver.implicitly_wait(3)
             
-        # Print 
-        for section in course.all_courses[course_name]:
-            print(section.name, section.time)
+        course_time = get_better_time(course_time)
             
-            for lecture in course.all_courses[course_name][section]:
-                print('\t',lecture.name, lecture.time)
+        for course_n in Course.current_course.keys():
+            if course == course_n:
+                course_n.time = course_time
                 
-        
+            for section in Course.current_course[course_n]:
+                if section == section_instance:
+                    section.time = section_time
+                
+    
     def download_videos(self, driver):
         
         driver.find_element(By.ID, "overlayPlayButton").click()
