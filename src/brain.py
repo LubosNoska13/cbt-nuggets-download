@@ -141,28 +141,36 @@ class Brain:
             section_time = get_better_time(section_time)
             driver.implicitly_wait(3)
             
+            for course_n in Course.current_course.keys():
+                for section in Course.current_course[course]:
+                    if section == section_instance:
+                        section.time = section_time
+            
         course_time = get_better_time(course_time)
             
         for course_n in Course.current_course.keys():
             if course == course_n:
                 course_n.time = course_time
                 
-            for section in Course.current_course[course_n]:
-                if section == section_instance:
-                    section.time = section_time
                 
                 
     def create_file_structure(self):
         
         path = "Courses\\"
         for course in Course.current_course.keys():
-            print(course.name, course.time)
+            path = f"Courses\\{course.name} {course.time}"
+            os.makedirs(path, exist_ok = True)
             
             for section in Course.current_course[course]:
-                print(section.name, section.time)
+                path = f"Courses\\{course.name} {course.time}\\{section.name} {section.time}"
+                os.makedirs(path, exist_ok = True)
                 
-                for lecture in Course.current_course[course][section]:
-                    print('\t',lecture.name, lecture.time)
+                
+                # for lecture in Course.current_course[course][section]:
+                #     path = f"Courses\\{course.name} {course.time}\\{section.name} {section.time}\\{lecture.name} {lecture.time}"
+                #     print(path)
+                    # print('\t',lecture.name, lecture.time)
+                    # pass
         
         
     
