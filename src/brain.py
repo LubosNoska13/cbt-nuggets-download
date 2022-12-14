@@ -141,21 +141,38 @@ class Brain:
             section_time = get_better_time(section_time)
             driver.implicitly_wait(3)
             
+            for course_n in Course.current_course.keys():
+                for section in Course.current_course[course]:
+                    if section == section_instance:
+                        section.time = section_time
+            
         course_time = get_better_time(course_time)
             
         for course_n in Course.current_course.keys():
             if course == course_n:
                 course_n.time = course_time
                 
-            for section in Course.current_course[course_n]:
-                if section == section_instance:
-                    section.time = section_time
                 
+                
+    def create_file_structure(self):
+        
+        for course in Course.current_course.keys():
+            path = os.path.normpath(f"Courses/{course.name} {course.time}")
+            # path = f"Courses\\{course.name} {course.time}"
+            os.makedirs(path, exist_ok = True)
+            
+            for section in Course.current_course[course]:
+                path = os.path.normpath(f"Courses/{course.name} {course.time}/{section.name} {section.time}")
+                # path = f"Courses\\{course.name} {course.time}\\{section.name} {section.time}"
+                os.makedirs(path, exist_ok = True)
+                
+                for lecture in Course.current_course[course][section]:
+                    pass
+                    
     
-    def download_videos(self, driver):
+    def download_videos(self, driver, name: str, path: str):
         
         driver.find_element(By.ID, "overlayPlayButton").click()
-        # driver.implicitly_wait(5)
         time.sleep(5)
 
 
@@ -204,7 +221,7 @@ class Brain:
             except Exception as e:
                 pass
             
-        ydl_opts = {"outtmpl": "video1"+".%(ext)s", 
+        ydl_opts = {"outtmpl": f"{path}{name}"+".%(ext)s", 
                     # 'm3u8': 'ffmpeg', 
                     # "ffmpeg_location": "C:\\yt-dlp\\ffmpeg.exe", 
                     # "prefer_ffmpeg": True, 

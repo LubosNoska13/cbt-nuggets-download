@@ -24,6 +24,7 @@ def download_course():
         driver.get(link)
         driver.implicitly_wait(5)
         brain.get_html_information(driver=driver, link=link)
+        brain.create_file_structure()
         brain.download_videos(driver=driver)
     
     
