@@ -156,28 +156,23 @@ class Brain:
                 
     def create_file_structure(self):
         
-        path = "Courses\\"
         for course in Course.current_course.keys():
-            path = f"Courses\\{course.name} {course.time}"
+            path = os.path.normpath(f"Courses/{course.name} {course.time}")
+            # path = f"Courses\\{course.name} {course.time}"
             os.makedirs(path, exist_ok = True)
             
             for section in Course.current_course[course]:
-                path = f"Courses\\{course.name} {course.time}\\{section.name} {section.time}"
+                path = os.path.normpath(f"Courses/{course.name} {course.time}/{section.name} {section.time}")
+                # path = f"Courses\\{course.name} {course.time}\\{section.name} {section.time}"
                 os.makedirs(path, exist_ok = True)
                 
-                
-                # for lecture in Course.current_course[course][section]:
-                #     path = f"Courses\\{course.name} {course.time}\\{section.name} {section.time}\\{lecture.name} {lecture.time}"
-                #     print(path)
-                    # print('\t',lecture.name, lecture.time)
-                    # pass
-        
-        
+                for lecture in Course.current_course[course][section]:
+                    pass
+                    
     
-    def download_videos(self, driver):
+    def download_videos(self, driver, name: str, path: str):
         
         driver.find_element(By.ID, "overlayPlayButton").click()
-        # driver.implicitly_wait(5)
         time.sleep(5)
 
 
@@ -226,7 +221,7 @@ class Brain:
             except Exception as e:
                 pass
             
-        ydl_opts = {"outtmpl": "video1"+".%(ext)s", 
+        ydl_opts = {"outtmpl": f"{path}{name}"+".%(ext)s", 
                     # 'm3u8': 'ffmpeg', 
                     # "ffmpeg_location": "C:\\yt-dlp\\ffmpeg.exe", 
                     # "prefer_ffmpeg": True, 
