@@ -152,6 +152,38 @@ class Brain:
                     section.time = section_time
                 
     
+    def click_to_sections_and_download(self, driver):
+        time.sleep(6)
+        
+        sections = driver.find_elements(By.CLASS_NAME,  "SkillListItemHeader-sc-pqcd25-2")
+        lecture_list = driver.find_elements(By.CLASS_NAME, "StyledVideoList-sc-1rxkvjw-0")
+        
+        idx = 0
+        for section, all_lectures in zip(sections, lecture_list):
+            time.sleep(1)
+            driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", section)
+            # section.location_once_scrolled_into_view
+            
+            time.sleep(2)
+            if idx>= 1:
+                section.click()
+            
+            
+            time.sleep(2)
+            lectures = all_lectures.find_elements(By.CLASS_NAME, "VideoListItem-sc-1rxkvjw-1")
+            
+            for lecture in lectures:
+                driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", lecture)
+                
+                time.sleep(1)
+                lecture.click()
+                
+                self.download_videos(driver, 'video')
+                
+                time.sleep(2)
+            idx+=1
+            
+            
     def download_videos(self, driver):
         
         driver.find_element(By.ID, "overlayPlayButton").click()
