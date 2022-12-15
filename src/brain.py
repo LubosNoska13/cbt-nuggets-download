@@ -180,25 +180,23 @@ class Brain:
         for section, all_lectures in zip(sections, lecture_list):
             time.sleep(1)
             driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", section)
-            # section.location_once_scrolled_into_view
             
-            time.sleep(2)
             if idx>= 1:
+                time.sleep(2)
                 section.click()
             
-            
-            time.sleep(2)
             lectures = all_lectures.find_elements(By.CLASS_NAME, "VideoListItem-sc-1rxkvjw-1")
             
             for lecture in lectures:
+                time.sleep(2)
                 driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", lecture)
                 
-                time.sleep(1)
+                time.sleep(2)
                 lecture.click()
                 
-                self.download_videos(driver, 'video')
+                time.sleep(3)
+                self.download_videos(driver, 'video', 'Courses\\')
                 
-                time.sleep(2)
             idx+=1
             
             
