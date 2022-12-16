@@ -17,6 +17,9 @@ def download_course():
     
     brain = Brain()
     brain.get_course_links()
+    
+    brain.get_credentials()
+    
     brain.log_in_to_website(credentails={'email': 'martin@xas', 'password': 'ascas'}, driver=driver)
     
     for link in brain.links_array:

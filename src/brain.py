@@ -58,7 +58,45 @@ class Brain:
                 
         return True
     
-    def log_in_to_website(self, credentails: dict, driver, log_in_link: str="https://www.cbtnuggets.com/login"):
+    
+    def get_credentials(self) -> dict:
+        with open("credentials.txt", 'r') as file:
+            file_content = file.read().splitlines()
+            # print(file_content)
+            
+            if not all(["email" in ''.join(file_content), "password" in ''.join(file_content)]):
+                raise Exception("Someting is mssing")
+            
+            for line in file_content:
+                if set(line) == set(" ") or line == "":
+                    pass
+                    
+                
+                
+                
+                if ':' in line:
+                    pass
+                    # print(line)
+                    
+                    
+                if "email" in line:
+                    if not ":" in line:
+                        raise Exception("Missing ':' in line")
+                    
+                    line = line.split(":")
+                    
+                    
+                
+                if line[0] == "email":
+                    email = line[1].strip()
+                    
+                if line[0] == "password":
+                    password = line[1].strip()
+                    
+            # print(email)
+            # print(password)
+    
+    def log_in_to_website(self, credentails: dict, driver, log_in_link: str="https://www.cbtnuggets.com/login") -> None:
         
         driver.get(log_in_link)
         driver.implicitly_wait(10)
@@ -69,7 +107,7 @@ class Brain:
         driver.find_element(By.CLASS_NAME, "login-button").click()
 
     
-    def get_html_information(self, driver, link: str):
+    def get_html_information(self, driver, link: str) -> None:
         
         def get_rid_of_special_characters(element: str) -> str:
             return "".join([x for x in element if x not in "/><:\"#\\|?!*,%[].'';:"])
