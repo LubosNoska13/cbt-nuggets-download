@@ -5,6 +5,7 @@ import requests
 import json
 import time
 import os
+import re
 
 from yt_dlp import YoutubeDL
 
@@ -60,46 +61,51 @@ class Brain:
     
     
     def get_credentials(self) -> dict:
+        
+        
+        def validate_email(email: str):
+            email_pattern =  r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+            if (re.fullmatch(email_pattern, email)):
+                return True
+            return False
+        
         with open("credentials.txt", 'r') as file:
             file_content = file.read().splitlines()
-            # print(file_content)
             
             if not all(["email" in ''.join(file_content), "password" in ''.join(file_content)]):
-                raise Exception("Someting is mssing")
+                raise Exception("Email or Password keyword is missing")
             
             for line in file_content:
-                if set(line) == set(" ") or line == "":
-                    pass
-                    
                 
-                
-                
-                if ':' in line:
-                    pass
-                    # print(line)
+                if not (set(line) == set(" ") or line == ""):
                     
-                    
-                if "email" in line:
                     if not ":" in line:
-                        raise Exception("Missing ':' in line")
+                        raise Exception(f"Missing ':' in line> {line}")
                     
                     line = line.split(":")
                     
+                    if line[0] == "email":
+                        if not (set(line[1]) == set(" ") or line[1] == ""):
+                            if validate_email(line[1].strip()):
+                                email = line[1].strip()
+                            else:
+                                raise Exception("Email address is invalid")
+                        else:
+                            raise Exception("Email placeholder is empty")
+                        
+                    if line[0] == "password":
+                        if not (set(line[1]) == set(" ") or line[1] == ""):
+                            password = line[1].strip()
+                        else:
+                            raise Exception("Password placeholder is empty")
+            return {"email": email, "password": password}
                     
-                
-                if line[0] == "email":
-                    email = line[1].strip()
                     
-                if line[0] == "password":
-                    password = line[1].strip()
-                    
-            # print(email)
-            # print(password)
     
     def log_in_to_website(self, credentails: dict, driver, log_in_link: str="https://www.cbtnuggets.com/login") -> None:
         
         driver.get(log_in_link)
-        driver.implicitly_wait(10)
+        time.sleep(6)
         
         driver.find_element(By.ID, "email").send_keys(credentails['email'])
         driver.find_element(By.ID, "password").send_keys(credentails['password'])
@@ -207,6 +213,25 @@ class Brain:
                 for lecture in Course.current_course[course][section]:
                     pass
                     
+    
+    
+    def nwm(self, driver):
+        
+        sections = driver.find_elements(By.CLASS_NAME,  "SkillListItemHeader-sc-pqcd25-2")
+        lecture_list = driver.find_elements(By.CLASS_NAME, "StyledVideoList-sc-1rxkvjw-0")
+        
+        for course in Course.current_course.keys():
+            # print(course.name)
+            
+            for section in Course.current_course[course]:
+                # print('\t',section.name)
+                click_section()
+        
+                for lecture in Course.current_course[course][section]:
+                    path = os.path.normpath(f"Courses/{course.name} {course.time}/{section.name} {section.time}/{lecture.name} {lecture.time}")
+                    # print('\t\t',lecture.name)
+                    click_lecture(f"{lecture.name} {lecture.time}", path)
+        
     
     def click_to_sections_and_download(self, driver):
         time.sleep(6)
