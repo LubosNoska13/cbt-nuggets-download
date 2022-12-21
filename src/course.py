@@ -1,6 +1,4 @@
 
-#! Represation
-
 class CourseSkeleton:
     current_course = {}
     
@@ -10,6 +8,9 @@ class CourseSkeleton:
         
         self.name = name
         self.time = time
+        
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self.name, self.time})"
 
 
 class Course(CourseSkeleton):
@@ -33,6 +34,8 @@ class Course(CourseSkeleton):
         lecture = Lecture(lecture_name, lecture_time)
         self.current_course[self][section_instance].append(lecture)
         
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self.name}, {self.time}, {self.link})"
         
 class Section(CourseSkeleton):
     pass
