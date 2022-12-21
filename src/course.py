@@ -1,11 +1,13 @@
 
-#! Check that the arguments are of the required type
 #! Represation
 
 class CourseSkeleton:
     current_course = {}
     
     def __init__(self, name: str, time: str) -> None:
+        assert isinstance(name, str), f"Name: {name} must be string type."
+        assert isinstance(time, str), f"Time: {time} must be string type."
+        
         self.name = name
         self.time = time
 
@@ -13,6 +15,9 @@ class CourseSkeleton:
 class Course(CourseSkeleton):
     def __init__(self, name: str, time: str, link: str) -> None:
         super().__init__(name, time)
+        
+        assert isinstance(link, str), f"Link {link} must be string type."
+        
         self.link = link
         self.add_course()
     
