@@ -19,16 +19,13 @@ def download_course():
     brain.get_course_links()
     
     credentials = brain.get_credentials()
-    
     brain.log_in_to_website(credentails=credentials, driver=driver)
     
     for link in brain.links_array:
         
         driver.get(link)
-        driver.implicitly_wait(5)
         brain.get_html_information(driver=driver, link=link)
-        brain.click_to_sections_and_download(driver=driver)
-        # brain.download_videos(driver=driver)
+        brain.create_folder_and_download(driver=driver)
     
     
     driver.quit()

@@ -31,6 +31,7 @@ class Brain:
         
         response = r.status_code
         if 200 <= r.status_code <= 299:
+            print(f"Url address is valid: {link}")
             return True
         else:
             raise Exception(f"[{response} Error]: {link}")
@@ -105,11 +106,12 @@ class Brain:
     def log_in_to_website(self, credentails: dict, driver, log_in_link: str="https://www.cbtnuggets.com/login") -> None:
         
         driver.get(log_in_link)
-        time.sleep(6)
+        time.sleep(5)
         
         driver.find_element(By.ID, "email").send_keys(credentails['email'])
+        time.sleep(1)
         driver.find_element(By.ID, "password").send_keys(credentails['password'])
-        time.sleep(4)
+        time.sleep(2)
         driver.find_element(By.CLASS_NAME, "login-button").click()
 
     
@@ -129,7 +131,8 @@ class Brain:
         if self.validate_url_address(link=link):
             pass
         
-        driver.implicitly_wait(5)
+        print('Waiting for website.')
+        time.sleep(5)
         
         course_name = driver.find_element(By.TAG_NAME, "h1").get_attribute('innerHTML')
         
@@ -196,74 +199,151 @@ class Brain:
             if course == course_n:
                 course_n.time = course_time
                 
+        print("Have html information.")
                 
+    # def create_file_structure(self):
+        
+    #     for course in Course.current_course.keys():
+    #         path = os.path.normpath(f"Courses/{course.name} {course.time}")
+    #         # path = f"Courses\\{course.name} {course.time}"
+    #         os.makedirs(path, exist_ok = True)
+            
+    #         for section in Course.current_course[course]:
+    #             path = os.path.normpath(f"Courses/{course.name} {course.time}/{section.name} {section.time}")
+    #             # path = f"Courses\\{course.name} {course.time}\\{section.name} {section.time}"
+    #             os.makedirs(path, exist_ok = True)
                 
-    def create_file_structure(self):
+    #             # for lecture in Course.current_course[course][section]:
+    #             #     pass
+            
+    # def create_file_structure(self, path: str):
+    #     path = os.path.normpath(path)
+        
+    #     if not os.path.exists(path):
+    #         try:
+    #             os.makedirs(path)
+    #             return True
+    #         except OSError:
+    #             raise Exception(f"Creation of the directory {path} failed")
+                # return False
+        # else:
+        #     if path != "Courses/":
+        #         logger.info(f"Course already downloaded. Skipped course - {path}")
+        #     return False
+    
+    
+    def create_folder_and_download(self, driver):
+        
+        def has_dir_all_lectures(path: str, lecture_list: list) -> bool:
+            if os.path.exists(path):
+                if len(os.listdir(path)) == len(lecture_list):
+                    return True
+                return False
+        
+        
+        def create_folder(path: str) -> bool:
+            path = os.path.normpath(path)
+            
+            if not os.path.exists(path):
+                try:
+                    os.makedirs(path)
+                    return True
+                except OSError:
+                    raise Exception(f"Creation of the directory {path} failed")
+        
+        
+        sections_click = driver.find_elements(By.CLASS_NAME,  "SkillListItemHeader-sc-pqcd25-2")
+        lecture_list_click = driver.find_elements(By.CLASS_NAME, "StyledVideoList-sc-1rxkvjw-0")
+        
         
         for course in Course.current_course.keys():
-            path = os.path.normpath(f"Courses/{course.name} {course.time}")
-            # path = f"Courses\\{course.name} {course.time}"
-            os.makedirs(path, exist_ok = True)
             
-            for section in Course.current_course[course]:
-                path = os.path.normpath(f"Courses/{course.name} {course.time}/{section.name} {section.time}")
-                # path = f"Courses\\{course.name} {course.time}\\{section.name} {section.time}"
-                os.makedirs(path, exist_ok = True)
+            path = f"Courses/{course.name} {course.time}"
+
+            create_folder(path=path)
+            print("Start creating file structure.")
+            
+            sec_idx = 0
+            for section, sec_click, all_lectures_click in zip(Course.current_course[course], sections_click, lecture_list_click):
+                path = f"Courses/{course.name} {course.time}/{section.name} {section.time}"
+
+                create_folder(path=path)
                 
-                for lecture in Course.current_course[course][section]:
-                    pass
+                time.sleep(1)
+                driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", sec_click)
+                
+                if sec_idx >= 1:
+                    time.sleep(2)
+                    sec_click.click()
+                
+                come_section = True
+                lectures_click = all_lectures_click.find_elements(By.CLASS_NAME, "VideoListItem-sc-1rxkvjw-1")
+                
+                for lecture, lec_click in zip(Course.current_course[course][section], lectures_click):
+                    # path = f"Courses/{course.name} {course.time}/{section.name} {section.time}/{lecture.name} {lecture.time}"
                     
+                    if not has_dir_all_lectures(path=path, lecture_list=lectures_click):
+                        
+                        if f"{lecture.name} {lecture.time}" not in os.listdir(path):
+                            
+                            if come_section:
+                                print(f'Starting with section: {section.name}')
+                                come_section = False
+                                
+                            
+                            time.sleep(2)
+                            driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", lec_click)
+
+                            time.sleep(2)
+                            lec_click.click()
+                            time.sleep(1)
+                            driver.execute_script("window.scrollTo(0, 0);")
+                            
+                            self.download_video(driver=driver, name=f"{lecture.name} {lecture.time}", path=path)
+                            # print('')
+                            # os.makedirs(os.path.normpath(f"{path}/{lecture.name} {lecture.time}"))
+                            print(f"Download lecture: {lecture.name}")
+                    else:
+                        print(f"Section: {section.name} has all video downloaded.")
+                        break
+                    
+                    
+                    time.sleep(2)
+                    
+                sec_idx += 1
+        
     
-    
-    def nwm(self, driver):
+    # def click_to_sections_and_download(self, driver):
+    #     time.sleep(6)
         
-        sections = driver.find_elements(By.CLASS_NAME,  "SkillListItemHeader-sc-pqcd25-2")
-        lecture_list = driver.find_elements(By.CLASS_NAME, "StyledVideoList-sc-1rxkvjw-0")
+    #     sections = driver.find_elements(By.CLASS_NAME,  "SkillListItemHeader-sc-pqcd25-2")
+    #     lecture_list = driver.find_elements(By.CLASS_NAME, "StyledVideoList-sc-1rxkvjw-0")
         
-        for course in Course.current_course.keys():
-            # print(course.name)
+    #     idx = 0
+    #     for section, all_lectures in zip(sections, lecture_list):
+    #         time.sleep(1)
+    #         driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", section)
             
-            for section in Course.current_course[course]:
-                # print('\t',section.name)
-                click_section()
-        
-                for lecture in Course.current_course[course][section]:
-                    path = os.path.normpath(f"Courses/{course.name} {course.time}/{section.name} {section.time}/{lecture.name} {lecture.time}")
-                    # print('\t\t',lecture.name)
-                    click_lecture(f"{lecture.name} {lecture.time}", path)
-        
-    
-    def click_to_sections_and_download(self, driver):
-        time.sleep(6)
-        
-        sections = driver.find_elements(By.CLASS_NAME,  "SkillListItemHeader-sc-pqcd25-2")
-        lecture_list = driver.find_elements(By.CLASS_NAME, "StyledVideoList-sc-1rxkvjw-0")
-        
-        idx = 0
-        for section, all_lectures in zip(sections, lecture_list):
-            time.sleep(1)
-            driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", section)
+    #         if idx>= 1:
+    #             time.sleep(2)
+    #             section.click()
             
-            if idx>= 1:
-                time.sleep(2)
-                section.click()
+    #         lectures = all_lectures.find_elements(By.CLASS_NAME, "VideoListItem-sc-1rxkvjw-1")
             
-            lectures = all_lectures.find_elements(By.CLASS_NAME, "VideoListItem-sc-1rxkvjw-1")
-            
-            for lecture in lectures:
-                time.sleep(2)
-                driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", lecture)
+    #         for lecture in lectures:
+    #             time.sleep(2)
+    #             driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", lecture)
                 
-                time.sleep(2)
-                lecture.click()
+    #             time.sleep(2)
+    #             lecture.click()
                 
-                time.sleep(3)
-                self.download_videos(driver, 'video', 'Courses\\')
+    #             time.sleep(3)
+    #             # self.download_videos(driver, 'video', 'Courses\\')
                 
-            idx+=1
+    #         idx+=1
             
             
-    def download_videos(self, driver, name: str, path: str):
+    def download_video(self, driver, name: str, path: str):
         
         driver.find_element(By.ID, "overlayPlayButton").click()
         time.sleep(5)
@@ -314,7 +394,8 @@ class Brain:
             except Exception as e:
                 pass
             
-        ydl_opts = {"outtmpl": f"{path}{name}"+".%(ext)s", 
+        path = os.path.normpath(f"{path}/{name}")
+        ydl_opts = {"outtmpl": path+".%(ext)s", 
                     # 'm3u8': 'ffmpeg', 
                     # "ffmpeg_location": "C:\\yt-dlp\\ffmpeg.exe", 
                     # "prefer_ffmpeg": True, 
