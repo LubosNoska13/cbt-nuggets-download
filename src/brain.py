@@ -13,13 +13,17 @@ class Brain:
     links_array = []
     
     def __init__(self):
-        self.is_internet_connection()
+        if self.is_internet_connection():
+            pass
     
-    def is_internet_connection(self, host: str="http://google.com"):
+    def is_internet_connection(self, host: str="http://google.com") -> bool:
         try:
             urllib.request.urlopen(host)
         except:
             raise Exception("You don't have internet connection!")
+
+        return True
+    
     
     def validate_url_address(self, link: str) -> bool:
         
@@ -232,7 +236,7 @@ class Brain:
         #     return False
     
     
-    def create_folder_and_download(self, driver):
+    def create_folder_and_download(self, driver) -> None:
         
         def has_dir_all_lectures(path: str, lecture_list: list) -> bool:
             if os.path.exists(path):
@@ -343,7 +347,7 @@ class Brain:
     #         idx+=1
             
             
-    def download_video(self, driver, name: str, path: str):
+    def download_video(self, driver, name: str, path: str) -> None:
         
         driver.find_element(By.ID, "overlayPlayButton").click()
         time.sleep(5)
