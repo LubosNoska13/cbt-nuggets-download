@@ -7,6 +7,7 @@ import time
 import os
 import re
 
+from src.logging_setup import logger
 from yt_dlp import YoutubeDL
 
 class Brain:
@@ -14,13 +15,15 @@ class Brain:
     
     def __init__(self):
         if self.is_internet_connection():
-            pass
+            logger.info("You have access to the internet.")
     
     def is_internet_connection(self, host: str="http://google.com") -> bool:
         try:
             urllib.request.urlopen(host)
         except:
-            raise Exception("You don't have internet connection!")
+            logger.exception("You don't have internet connection!")
+            raise
+            # raise Exception("You don't have internet connection!")
 
         return True
     
@@ -35,10 +38,13 @@ class Brain:
         
         response = r.status_code
         if 200 <= r.status_code <= 299:
-            print(f"Url address is valid: {link}")
+            logger.info(f"Url address is valid: {link}")
+            # print(f"Url address is valid: {link}")
             return True
         else:
-            raise Exception(f"[{response} Error]: {link}")
+            logger.exception(f"[{response} Error]: {link}")
+            raise
+            # raise Exception(f"[{response} Error]: {link}")
         
         
     def get_course_links(self) -> bool:
@@ -56,11 +62,15 @@ class Brain:
                 elif set(url) == set(' ') or url == '':
                     pass
                 else:
-                    print(url)
-                    raise Exception("Something is wrong with the url address!")
+                    logger.exception(f"Something is wrong with the url address! {url}")
+                    raise
+                    # print(url)
+                    # raise Exception("Something is wrong with the url address!")
                 
             if n_links == 0:
-                raise Exception("File 'course_links.txt' is empty!")
+                logger.exception("File 'course_links.txt' is empty!")
+                raise
+                # raise Exception("File 'course_links.txt' is empty!")
                 
         return True
     
@@ -78,14 +88,18 @@ class Brain:
             file_content = file.read().splitlines()
             
             if not all(["email" in ''.join(file_content), "password" in ''.join(file_content)]):
-                raise Exception("Email or Password keyword is missing")
+                logger.exception("Email or Password keyword is missing in 'credentials.txt' file!")
+                raise
+                # raise Exception("Email or Password keyword is missing")
             
             for line in file_content:
                 
                 if not (set(line) == set(" ") or line == ""):
                     
                     if not ":" in line:
-                        raise Exception(f"Missing ':' in line> {line}")
+                        logger.exception(f"Missing ':' in line> {line}")
+                        raise
+                        # raise Exception(f"Missing ':' in line> {line}")
                     
                     line = line.split(":")
                     
@@ -94,20 +108,28 @@ class Brain:
                             if validate_email(line[1].strip()):
                                 email = line[1].strip()
                             else:
-                                raise Exception("Email address is invalid")
+                                logger.exception("Email address is invalid!")
+                                raise
+                                # raise Exception("Email address is invalid")
                         else:
-                            raise Exception("Email placeholder is empty")
+                            logger.exception("Email placeholder is empty in file 'credentials.txt'!")
+                            raise
+                            # raise Exception("Email placeholder is empty")
                         
                     if line[0] == "password":
                         if not (set(line[1]) == set(" ") or line[1] == ""):
                             password = line[1].strip()
                         else:
-                            raise Exception("Password placeholder is empty")
+                            logger.exception("Password placeholder is empty in file 'credentials.txt'!")
+                            raise
+                            # raise Exception("Password placeholder is empty")
             return {"email": email, "password": password}
                     
                     
     
     def log_in_to_website(self, credentails: dict, driver, log_in_link: str="https://www.cbtnuggets.com/login") -> None:
+        
+        logger.info(f"Logging into website: {log_in_link}")
         
         driver.get(log_in_link)
         time.sleep(5)
@@ -117,6 +139,8 @@ class Brain:
         driver.find_element(By.ID, "password").send_keys(credentails['password'])
         time.sleep(2)
         driver.find_element(By.CLASS_NAME, "login-button").click()
+        
+        logger.info("Logging in successfully.")
 
     
     def get_html_information(self, driver, link: str) -> None:
@@ -151,7 +175,6 @@ class Brain:
         course = Course(name=course_name, time='', link=link)
         
         driver.implicitly_wait(3)
-
         all_sections = driver.find_elements(By.CLASS_NAME, "SkillListItem-sc-pqcd25-1")
         
         section_idx = 0
@@ -203,7 +226,7 @@ class Brain:
             if course == course_n:
                 course_n.time = course_time
                 
-        print("Have html information.")
+        logger.info("Have html information.")
                 
     # def create_file_structure(self):
         
@@ -265,7 +288,7 @@ class Brain:
             path = f"Courses/{course.name} {course.time}"
 
             create_folder(path=path)
-            print("Start creating file structure.")
+            # logger.info("Start creating file structure.")
             
             sec_idx = 0
             for section, sec_click, all_lectures_click in zip(Course.current_course[course], sections_click, lecture_list_click):
@@ -280,19 +303,19 @@ class Brain:
                     time.sleep(2)
                     sec_click.click()
                 
-                come_section = True
+                logger.info(f"Looking at section: {section.name}")
+                # come_section = True
                 lectures_click = all_lectures_click.find_elements(By.CLASS_NAME, "VideoListItem-sc-1rxkvjw-1")
                 
                 for lecture, lec_click in zip(Course.current_course[course][section], lectures_click):
                     # path = f"Courses/{course.name} {course.time}/{section.name} {section.time}/{lecture.name} {lecture.time}"
                     
                     if not has_dir_all_lectures(path=path, lecture_list=lectures_click):
-                        
-                        if f"{lecture.name} {lecture.time}" not in os.listdir(path):
+                        if f"{lecture.name} {lecture.time}.mp4" not in os.listdir(path):
                             
-                            if come_section:
-                                print(f'Starting with section: {section.name}')
-                                come_section = False
+                            # if come_section:
+                            #     logger.info(f'Starting with section: {section.name}')
+                            #     come_section = False
                                 
                             
                             time.sleep(2)
@@ -306,9 +329,11 @@ class Brain:
                             self.download_video(driver=driver, name=f"{lecture.name} {lecture.time}", path=path)
                             # print('')
                             # os.makedirs(os.path.normpath(f"{path}/{lecture.name} {lecture.time}"))
-                            print(f"Download lecture: {lecture.name}")
+                            # logger.info(f"Downloaded lecture: {lecture.name}")
+                        else:
+                            logger.info(f"Lecture: '{lecture.name} {lecture.time}' has already been downloaded.")
                     else:
-                        print(f"Section: {section.name} has all video downloaded.")
+                        logger.info(f"Section: '{section.name}' has all video downloaded.")
                         break
                     
                     
@@ -349,7 +374,12 @@ class Brain:
             
     def download_video(self, driver, name: str, path: str) -> None:
         
-        driver.find_element(By.ID, "overlayPlayButton").click()
+        try:
+            driver.find_element(By.ID, "overlayPlayButton").click()
+        except:
+            logger.exception(f"Lecture: '{name}' don't have play button!")
+            raise
+            
         time.sleep(5)
 
 
@@ -382,7 +412,8 @@ class Brain:
         json_file_path = "network_log.json"
         with open(json_file_path, "r", encoding="utf-8") as f:
             logs = json.loads(f.read())
-    
+
+        
         # Iterate the logs
         for log in logs:
     
@@ -405,6 +436,9 @@ class Brain:
                     # "prefer_ffmpeg": True, 
                     "format": "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best"
                     }
+        
+        logger.info(f"Start downloading lecture {name}")
+        
         with YoutubeDL(ydl_opts) as ydl:
             ydl.download(m3u8_file)
 
