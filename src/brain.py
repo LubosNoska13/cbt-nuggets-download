@@ -23,7 +23,6 @@ class Brain:
         except:
             logger.exception("You don't have internet connection!")
             raise
-            # raise Exception("You don't have internet connection!")
 
         return True
     
@@ -39,12 +38,10 @@ class Brain:
         response = r.status_code
         if 200 <= r.status_code <= 299:
             logger.info(f"Url address is valid: {link}")
-            # print(f"Url address is valid: {link}")
             return True
         else:
             logger.exception(f"[{response} Error]: {link}")
             raise
-            # raise Exception(f"[{response} Error]: {link}")
         
         
     def get_course_links(self) -> bool:
@@ -64,13 +61,10 @@ class Brain:
                 else:
                     logger.exception(f"Something is wrong with the url address! {url}")
                     raise
-                    # print(url)
-                    # raise Exception("Something is wrong with the url address!")
                 
             if n_links == 0:
                 logger.exception("File 'course_links.txt' is empty!")
                 raise
-                # raise Exception("File 'course_links.txt' is empty!")
                 
         return True
     
@@ -90,7 +84,6 @@ class Brain:
             if not all(["email" in ''.join(file_content), "password" in ''.join(file_content)]):
                 logger.exception("Email or Password keyword is missing in 'credentials.txt' file!")
                 raise
-                # raise Exception("Email or Password keyword is missing")
             
             for line in file_content:
                 
@@ -99,7 +92,6 @@ class Brain:
                     if not ":" in line:
                         logger.exception(f"Missing ':' in line> {line}")
                         raise
-                        # raise Exception(f"Missing ':' in line> {line}")
                     
                     line = line.split(":")
                     
@@ -110,11 +102,9 @@ class Brain:
                             else:
                                 logger.exception("Email address is invalid!")
                                 raise
-                                # raise Exception("Email address is invalid")
                         else:
                             logger.exception("Email placeholder is empty in file 'credentials.txt'!")
                             raise
-                            # raise Exception("Email placeholder is empty")
                         
                     if line[0] == "password":
                         if not (set(line[1]) == set(" ") or line[1] == ""):
@@ -122,7 +112,7 @@ class Brain:
                         else:
                             logger.exception("Password placeholder is empty in file 'credentials.txt'!")
                             raise
-                            # raise Exception("Password placeholder is empty")
+                            
             return {"email": email, "password": password}
                     
                     
@@ -164,11 +154,6 @@ class Brain:
         
         course_name = driver.find_element(By.TAG_NAME, "h1").get_attribute('innerHTML')
         
-        # course_time = driver.find_element(By.CLASS_NAME, "CourseOverviewItemAmount-sc-11d3cub-4").get_attribute('innerHTML')
-        # course_time = course_time[:course_time.find('<')] + 'hours'
-        # course_time = get_rid_of_special_characters(course_time)
-        
-        #! Link, is necessary
         Course.current_course = {}
         course_time = 0
         
@@ -228,36 +213,6 @@ class Brain:
                 
         logger.info("Have html information.")
                 
-    # def create_file_structure(self):
-        
-    #     for course in Course.current_course.keys():
-    #         path = os.path.normpath(f"Courses/{course.name} {course.time}")
-    #         # path = f"Courses\\{course.name} {course.time}"
-    #         os.makedirs(path, exist_ok = True)
-            
-    #         for section in Course.current_course[course]:
-    #             path = os.path.normpath(f"Courses/{course.name} {course.time}/{section.name} {section.time}")
-    #             # path = f"Courses\\{course.name} {course.time}\\{section.name} {section.time}"
-    #             os.makedirs(path, exist_ok = True)
-                
-    #             # for lecture in Course.current_course[course][section]:
-    #             #     pass
-            
-    # def create_file_structure(self, path: str):
-    #     path = os.path.normpath(path)
-        
-    #     if not os.path.exists(path):
-    #         try:
-    #             os.makedirs(path)
-    #             return True
-    #         except OSError:
-    #             raise Exception(f"Creation of the directory {path} failed")
-                # return False
-        # else:
-        #     if path != "Courses/":
-        #         logger.info(f"Course already downloaded. Skipped course - {path}")
-        #     return False
-    
     
     def create_folder_and_download(self, driver) -> None:
         
@@ -340,37 +295,6 @@ class Brain:
                     time.sleep(2)
                     
                 sec_idx += 1
-        
-    
-    # def click_to_sections_and_download(self, driver):
-    #     time.sleep(6)
-        
-    #     sections = driver.find_elements(By.CLASS_NAME,  "SkillListItemHeader-sc-pqcd25-2")
-    #     lecture_list = driver.find_elements(By.CLASS_NAME, "StyledVideoList-sc-1rxkvjw-0")
-        
-    #     idx = 0
-    #     for section, all_lectures in zip(sections, lecture_list):
-    #         time.sleep(1)
-    #         driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", section)
-            
-    #         if idx>= 1:
-    #             time.sleep(2)
-    #             section.click()
-            
-    #         lectures = all_lectures.find_elements(By.CLASS_NAME, "VideoListItem-sc-1rxkvjw-1")
-            
-    #         for lecture in lectures:
-    #             time.sleep(2)
-    #             driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", lecture)
-                
-    #             time.sleep(2)
-    #             lecture.click()
-                
-    #             time.sleep(3)
-    #             # self.download_videos(driver, 'video', 'Courses\\')
-                
-    #         idx+=1
-            
             
     def download_video(self, driver, name: str, path: str) -> None:
         
