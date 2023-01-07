@@ -290,40 +290,47 @@ class Brain:
                     
                 logger.info(f"Looking at section: {section.name}")
                 
-        #         lecture_items = sec_click.find_elements(By.CLASS_NAME, "course-video-information")
-        #         for lecture, lec_item in zip(all_sections[section], lecture_items):
+                # Find all lectures that belongs the current section
+                lecture_items = sec_click.find_elements(By.CLASS_NAME, "course-video-information")
+                for lecture, lec_item in zip(all_sections[section], lecture_items):
                     
-        #             if not has_dir_all_lectures(path=path, lecture_list=lecture_items):
-        #                 if f"{lecture.name} ({lecture.time}).mp4" not in os.listdir(path):
+                    # Check if the directory exists and have all lecture
+                    if not has_dir_all_lectures(path=path, lecture_list=lecture_items):
+                        
+                        # Check if the lecture has already been downloaded
+                        if f"{lecture.name} ({lecture.time}).mp4" not in os.listdir(path):
                             
-        #                     if len(lec_item.find_elements(By.CLASS_NAME, "active-video")) == 0:
-        #                         driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", lec_item)
+                            # Check if the lecture is active
+                            if len(lec_item.find_elements(By.CLASS_NAME, "active-video")) == 0:
                                 
-        #                         lec_click = lec_item.find_element(By.CLASS_NAME, "video-list-title")
-
-        #                         time.sleep(3)
-        #                         lec_click.click()
+                                # Scroll to the lecture and click on it
+                                driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", lec_item)
+                                lec_click = lec_item.find_element(By.CLASS_NAME, "video-list-title")
+                                time.sleep(3)
+                                lec_click.click()
                             
-        #                     else:
-        #                         time.sleep(1)
-        #                         driver.find_element(By.ID, "playButton").click()
-                                
+                            else:
+                                # Click on the play button
+                                time.sleep(1)
+                                driver.find_element(By.ID, "playButton").click()
                             
-        #                     time.sleep(3)
-        #                     driver.execute_script("window.scrollTo(0, 0);")
+                            # Scroll on the top of the website
+                            time.sleep(3)
+                            driver.execute_script("window.scrollTo(0, 0);")
                             
-        #                     self.download_video(driver=driver, name=f"{lecture.name} ({lecture.time})", path=path)
-        #                     logger.info(f"Downloaded lecture: {lecture.name}")
-        #                 else:
-        #                     logger.info(f"Lecture: '{lecture.name} {lecture.time}' has already been downloaded.")
-        #             else:
-        #                 logger.info(f"Section: '{section.name}' has all video downloaded.")
-        #                 break
+                            # Download lecture
+                            self.download_video(driver=driver, name=f"{lecture.name} ({lecture.time})", path=path)
+                            logger.info(f"Downloaded lecture: {lecture.name}")
+                        else:
+                            logger.info(f"Lecture: '{lecture.name} {lecture.time}' has already been downloaded.")
+                    else:
+                        logger.info(f"Section: '{section.name}' has all video downloaded.")
+                        break
                     
-                    
-        #         sec_idx += 1
+                # Increment section index
+                sec_idx += 1
             
-        #     logger.info(f"Course: '{course.name}' was succeffully downloaded.")
+            logger.info(f"Course: '{course.name}' was succeffully downloaded.")
             
     def download_video(self, driver, name: str, path: str) -> None:
         
@@ -331,8 +338,6 @@ class Brain:
             driver.find_element(By.ID, "overlayPlayButton").click()
         except:
             pass
-            # logger.exception(f"Lecture: '{name}' don't have play button!")
-            # raise
             
         time.sleep(1)
 
@@ -374,6 +379,7 @@ class Brain:
                 # URL is present inside the following keys
                 url = log["params"]["request"]["url"]
                 
+                # Check if the 'master' and 'token' is presented in the URL
                 if "master" in url and "token" in url:
                     m3u8_file = url
                     
