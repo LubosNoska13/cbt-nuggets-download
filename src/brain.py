@@ -147,21 +147,26 @@ class Brain:
                 better_time += f"{time % 60}m"
             return better_time
         
+        # Validate url address
         if self.validate_url_address(link=link):
             pass
         
         time.sleep(5)
-        
         logger.info(f"Start scraping website: {link}")
+        
+        # Find course name
         course_name = driver.find_element(By.TAG_NAME, "h1").get_attribute('innerHTML')
         
+        # Reset variable value
         course_time = 0
         
+        # Store informations about course
         course = Course(name=course_name, time='', link=link)
         
         driver.implicitly_wait(2)
-        all_sections = driver.find_elements(By.CLASS_NAME, "SkillListItem-sc-pqcd25-1")
         
+        # Find all sections
+        all_sections = driver.find_elements(By.CLASS_NAME, "SkillListItem-sc-pqcd25-1")
         for section_idx, section in enumerate(all_sections):
             
             # Reset variable value
@@ -178,31 +183,30 @@ class Brain:
             # Store all information about section
             section_instance = course.add_section(section_name=f"{section_idx}-{section_name}", section_time='')
             
-        #     # Find all lectures at current section
-        #     lecture_arr = section.find_elements(By.CLASS_NAME, "VideoListItemCopy-sc-1rxkvjw-4")
-            
-        #     for lecture_idx, lecture in enumerate(lecture_arr):
+            # Find all lectures that belongs current section
+            lecture_arr = section.find_elements(By.CLASS_NAME, "VideoListItemCopy-sc-1rxkvjw-4")
+            for lecture_idx, lecture in enumerate(lecture_arr):
                 
-        #         # Find lecture name
-        #         lecture_name = lecture.find_element(By.TAG_NAME, "span").get_attribute("innerHTML")
-        #         lecture_name = lecture_name[lecture_name.rfind('>')+1:]
-        #         lecture_name = get_rid_of_special_characters(lecture_name)
-        #         lecture_name = lecture_name.replace("&amp", "&")
+                # Find lecture name 
+                lecture_name = lecture.find_element(By.TAG_NAME, "span").get_attribute("innerHTML")
+                lecture_name = lecture_name[lecture_name.rfind('>')+1:]
+                lecture_name = get_rid_of_special_characters(lecture_name)
+                lecture_name = lecture_name.replace("&amp", "&")
                 
-        #         # Find lecture time
-        #         lecture_time_str = lecture.find_element(By.TAG_NAME, "div").get_attribute("innerHTML").replace('mins', 'min').strip().replace(' ', '')
-        #         lecture_time_str = get_rid_of_special_characters(lecture_time_str)
+                # Find lecture time
+                lecture_time_str = lecture.find_element(By.TAG_NAME, "div").get_attribute("innerHTML").replace('mins', 'min').strip().replace(' ', '')
+                lecture_time_str = get_rid_of_special_characters(lecture_time_str)
                 
-        #         # Convert time value to integer number
-        #         lecture_time = int(lecture_time_str[:lecture_time_str.find('m')])
+                # Convert time value to integer number
+                lecture_time = int(lecture_time_str[:lecture_time_str.find('m')])
                 
-        #         # Increment variables
-        #         section_time += lecture_time
-        #         course_time += lecture_time
-        #         lecture_idx += 1
+                # Increment variables
+                section_time += lecture_time
+                course_time += lecture_time
+                lecture_idx += 1
                 
-        #         # Store all lecture information
-        #         course.add_lecture(section_instance=section_instance, lecture_name=f"{lecture_idx}-{lecture_name}", lecture_time=lecture_time_str)
+                # Store all lecture information
+                course.add_lecture(section_instance=section_instance, lecture_name=f"{lecture_idx}-{lecture_name}", lecture_time=lecture_time_str)
             
         #     section_time = get_better_time(section_time)
         #     driver.implicitly_wait(3)
