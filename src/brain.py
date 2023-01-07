@@ -251,36 +251,44 @@ class Brain:
                     raise Exception(f"Creation of the directory {path} failed")
         
         
-        # for (course, all_sections), link in zip(Course.all_courses.items(), Brain.links_array):
+        for (course, all_sections), link in zip(Course.all_courses.items(), Brain.links_array):
             
-        #     if course.link == link:
-        #         pass
-        #     else:
-        #         continue
+            # Check that the url address are the same
+            if course.link == link:
+                pass
+            else:
+                continue
             
-        #     driver.get(link)
+            # Go to the website
+            driver.get(link)
+            driver.execute_script("window.scrollTo(0, 0);")
+            time.sleep(2)
             
-        #     driver.execute_script("window.scrollTo(0, 0);")
+            # Create a course directory
+            path = f"Courses/{course.name} {course.time}"
+            create_folder(path=path)
             
-        #     path = f"Courses/{course.name} {course.time}"
-        #     create_folder(path=path)
+            # Reset the variable value
+            sec_idx = 0
             
-        #     sections_click = driver.find_elements(By.CSS_SELECTOR, ".padding-20 > div:nth-child(3) > div")
-            
-        #     sec_idx = 0
-        #     for section, sec_click in zip(all_sections.keys(), sections_click):
-        #         path = f"Courses/{course.name} {course.time}/{section.name} ({section.time})"
-
-        #         create_folder(path=path)
+            # Find all sections
+            sections_click = driver.find_elements(By.CSS_SELECTOR, ".padding-20 > div:nth-child(3) > div")
+            for section, sec_click in zip(all_sections.keys(), sections_click):
                 
-        #         time.sleep(1)
-        #         driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", sec_click)
+                # Create a section directory
+                path = f"Courses/{course.name} {course.time}/{section.name} ({section.time})"
+                create_folder(path=path)
                 
-        #         if len(sec_click.find_elements(By.CLASS_NAME, "video-titles")) == 0:
-        #             sec_click.click()
-        #             time.sleep(1)
+                # Scroll to the section
+                time.sleep(1)
+                driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", sec_click)
+                
+                # Expand the section bar
+                if len(sec_click.find_elements(By.CLASS_NAME, "video-titles")) == 0:
+                    sec_click.click()
+                    time.sleep(1)
                     
-        #         logger.info(f"Looking at section: {section.name}")
+                logger.info(f"Looking at section: {section.name}")
                 
         #         lecture_items = sec_click.find_elements(By.CLASS_NAME, "course-video-information")
         #         for lecture, lec_item in zip(all_sections[section], lecture_items):
