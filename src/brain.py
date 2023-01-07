@@ -177,7 +177,7 @@ class Brain:
             section_name = section_name[section_name.rfind('>')+1:].strip()
             section_name = get_rid_of_special_characters(section_name)
             
-            # Index starts at 1
+            # Section index starts at 1
             section_idx += 1
             
             # Store all information about section
@@ -200,29 +200,35 @@ class Brain:
                 # Convert time value to integer number
                 lecture_time = int(lecture_time_str[:lecture_time_str.find('m')])
                 
-                # Increment variables
+                # Count the time
                 section_time += lecture_time
                 course_time += lecture_time
+                
+                # Lecture index starts at 1
                 lecture_idx += 1
                 
                 # Store all lecture information
                 course.add_lecture(section_instance=section_instance, lecture_name=f"{lecture_idx}-{lecture_name}", lecture_time=lecture_time_str)
             
-        #     section_time = get_better_time(section_time)
-        #     driver.implicitly_wait(3)
+            # Get better section time in format (3h6m)
+            section_time = get_better_time(section_time)
+            driver.implicitly_wait(3)
             
-        #     for course_n in Course.all_courses.keys():
-        #         for section in Course.all_courses[course]:
-        #             if section == section_instance:
-        #                 section.time = section_time
+            # Store the section time
+            for course_n in Course.all_courses.keys():
+                for section in Course.all_courses[course]:
+                    if section == section_instance:
+                        section.time = section_time
             
-        # course_time = get_better_time(course_time)
-            
-        # for course_n in Course.all_courses.keys():
-        #     if course == course_n:
-        #         course_n.time = course_time
+            # Get Better course time in format (3h6m)
+        course_time = get_better_time(course_time)
+        
+        # Store the course time
+        for course_n in Course.all_courses.keys():
+            if course == course_n:
+                course_n.time = course_time
                 
-        # logger.info("Have html information.")
+        logger.info("Have html information.")
                 
     
     def create_folder_and_download(self, driver, link: str) -> None:
