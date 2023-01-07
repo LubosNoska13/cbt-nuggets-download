@@ -130,7 +130,6 @@ class Brain:
         time.sleep(2)
         driver.find_element(By.CLASS_NAME, "login-button").click()
         
-        time.sleep(6)
         logger.info("Logging in successfully.")
 
     
@@ -147,91 +146,75 @@ class Brain:
                 better_time += f"{time % 60}m"
             return better_time
         
-        # Validate url address
         if self.validate_url_address(link=link):
             pass
         
+        print('Waiting for website.')
         time.sleep(5)
-        logger.info(f"Start scraping website: {link}")
         
-        # Find course name
         course_name = driver.find_element(By.TAG_NAME, "h1").get_attribute('innerHTML')
         
-        # Reset variable value
+        Course.current_course = {}
         course_time = 0
         
-        # Store informations about course
         course = Course(name=course_name, time='', link=link)
         
-        driver.implicitly_wait(2)
-        
-        # Find all sections
+        driver.implicitly_wait(3)
         all_sections = driver.find_elements(By.CLASS_NAME, "SkillListItem-sc-pqcd25-1")
-        for section_idx, section in enumerate(all_sections):
-            
-            # Reset variable value
+        
+        section_idx = 0
+        
+        for section in all_sections:
             section_time = 0
 
-            # Find section name
             section_name = section.find_element(By.CLASS_NAME, "SkillListItemHeaderHeading-sc-pqcd25-5").get_attribute('innerHTML')
-            section_name = section_name[section_name.rfind('>')+1:].strip()
+            section_name = section_name[section_name.rfind('>')+1:]
             section_name = get_rid_of_special_characters(section_name)
-            
-            # Section index starts at 1
+
             section_idx += 1
+            lecture_arr = section.find_elements(By.CLASS_NAME, "VideoListItemCopy-sc-1rxkvjw-4")
             
-            # Store all information about section
+            #
             section_instance = course.add_section(section_name=f"{section_idx}-{section_name}", section_time='')
             
-            # Find all lectures that belongs current section
-            lecture_arr = section.find_elements(By.CLASS_NAME, "VideoListItemCopy-sc-1rxkvjw-4")
-            for lecture_idx, lecture in enumerate(lecture_arr):
-                
-                # Find lecture name 
+            lecture_idx = 0
+            for lecture in lecture_arr:
                 lecture_name = lecture.find_element(By.TAG_NAME, "span").get_attribute("innerHTML")
                 lecture_name = lecture_name[lecture_name.rfind('>')+1:]
                 lecture_name = get_rid_of_special_characters(lecture_name)
-                lecture_name = lecture_name.replace("&amp", "&")
                 
-                # Find lecture time
-                lecture_time_str = lecture.find_element(By.TAG_NAME, "div").get_attribute("innerHTML").replace('mins', 'min').strip().replace(' ', '')
+                
+                lecture_time_str = lecture.find_element(By.TAG_NAME, "div").get_attribute("innerHTML")[1:-1].replace(' ','')
                 lecture_time_str = get_rid_of_special_characters(lecture_time_str)
+                if "min" not in lecture_time_str:
+                    lecture_time_str += 'n'
                 
-                # Convert time value to integer number
                 lecture_time = int(lecture_time_str[:lecture_time_str.find('m')])
                 
-                # Count the time
                 section_time += lecture_time
                 course_time += lecture_time
-                
-                # Lecture index starts at 1
                 lecture_idx += 1
                 
-                # Store all lecture information
                 course.add_lecture(section_instance=section_instance, lecture_name=f"{lecture_idx}-{lecture_name}", lecture_time=lecture_time_str)
             
-            # Get better section time in format (3h6m)
             section_time = get_better_time(section_time)
             driver.implicitly_wait(3)
             
-            # Store the section time
-            for course_n in Course.all_courses.keys():
-                for section in Course.all_courses[course]:
+            for course_n in Course.current_course.keys():
+                for section in Course.current_course[course]:
                     if section == section_instance:
                         section.time = section_time
             
-            # Get Better course time in format (3h6m)
         course_time = get_better_time(course_time)
-        
-        # Store the course time
-        for course_n in Course.all_courses.keys():
+            
+        for course_n in Course.current_course.keys():
             if course == course_n:
                 course_n.time = course_time
                 
         logger.info("Have html information.")
                 
     
-    def create_folder_and_download(self, driver, link: str) -> None:
+    def create_folder_and_download(self, driver) -> None:
         
         def has_dir_all_lectures(path: str, lecture_list: list) -> bool:
             if os.path.exists(path):
@@ -251,95 +234,78 @@ class Brain:
                     raise Exception(f"Creation of the directory {path} failed")
         
         
-        for (course, all_sections), link in zip(Course.all_courses.items(), Brain.links_array):
+        sections_click = driver.find_elements(By.CLASS_NAME,  "SkillListItemHeader-sc-pqcd25-2")
+        lecture_list_click = driver.find_elements(By.CLASS_NAME, "StyledVideoList-sc-1rxkvjw-0")
+        
+        
+        for course in Course.current_course.keys():
             
-            # Check that the url address are the same
-            if course.link == link:
-                pass
-            else:
-                continue
-            
-            # Go to the website
-            driver.get(link)
-            driver.execute_script("window.scrollTo(0, 0);")
-            time.sleep(2)
-            
-            # Create a course directory
             path = f"Courses/{course.name} {course.time}"
+
             create_folder(path=path)
+            # logger.info("Start creating file structure.")
             
-            # Reset the variable value
             sec_idx = 0
-            
-            # Find all sections
-            sections_click = driver.find_elements(By.CSS_SELECTOR, ".padding-20 > div:nth-child(3) > div")
-            for section, sec_click in zip(all_sections.keys(), sections_click):
-                
-                # Create a section directory
-                path = f"Courses/{course.name} {course.time}/{section.name} ({section.time})"
+            for section, sec_click, all_lectures_click in zip(Course.current_course[course], sections_click, lecture_list_click):
+                path = f"Courses/{course.name} {course.time}/{section.name} {section.time}"
+
                 create_folder(path=path)
                 
-                # Scroll to the section
                 time.sleep(1)
                 driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", sec_click)
                 
-                # Expand the section bar
-                if len(sec_click.find_elements(By.CLASS_NAME, "video-titles")) == 0:
+                if sec_idx >= 1:
+                    time.sleep(2)
                     sec_click.click()
-                    time.sleep(1)
-                    
-                logger.info(f"Looking at section: {section.name}")
                 
-                # Find all lectures that belongs the current section
-                lecture_items = sec_click.find_elements(By.CLASS_NAME, "course-video-information")
-                for lecture, lec_item in zip(all_sections[section], lecture_items):
+                logger.info(f"Looking at section: {section.name}")
+                # come_section = True
+                lectures_click = all_lectures_click.find_elements(By.CLASS_NAME, "VideoListItem-sc-1rxkvjw-1")
+                
+                for lecture, lec_click in zip(Course.current_course[course][section], lectures_click):
+                    # path = f"Courses/{course.name} {course.time}/{section.name} {section.time}/{lecture.name} {lecture.time}"
                     
-                    # Check if the directory exists and have all lecture
-                    if not has_dir_all_lectures(path=path, lecture_list=lecture_items):
-                        
-                        # Check if the lecture has already been downloaded
-                        if f"{lecture.name} ({lecture.time}).mp4" not in os.listdir(path):
+                    if not has_dir_all_lectures(path=path, lecture_list=lectures_click):
+                        if f"{lecture.name} {lecture.time}.mp4" not in os.listdir(path):
                             
-                            # Check if the lecture is active
-                            if len(lec_item.find_elements(By.CLASS_NAME, "active-video")) == 0:
+                            # if come_section:
+                            #     logger.info(f'Starting with section: {section.name}')
+                            #     come_section = False
                                 
-                                # Scroll to the lecture and click on it
-                                driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", lec_item)
-                                lec_click = lec_item.find_element(By.CLASS_NAME, "video-list-title")
-                                time.sleep(3)
-                                lec_click.click()
                             
-                            else:
-                                # Click on the play button
-                                time.sleep(1)
-                                driver.find_element(By.ID, "playButton").click()
-                            
-                            # Scroll on the top of the website
-                            time.sleep(3)
+                            time.sleep(2)
+                            driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", lec_click)
+
+                            time.sleep(2)
+                            lec_click.click()
+                            time.sleep(1)
                             driver.execute_script("window.scrollTo(0, 0);")
                             
-                            # Download lecture
-                            self.download_video(driver=driver, name=f"{lecture.name} ({lecture.time})", path=path)
-                            logger.info(f"Downloaded lecture: {lecture.name}")
+                            self.download_video(driver=driver, name=f"{lecture.name} {lecture.time}", path=path)
+                            # print('')
+                            # os.makedirs(os.path.normpath(f"{path}/{lecture.name} {lecture.time}"))
+                            # logger.info(f"Downloaded lecture: {lecture.name}")
                         else:
                             logger.info(f"Lecture: '{lecture.name} {lecture.time}' has already been downloaded.")
                     else:
                         logger.info(f"Section: '{section.name}' has all video downloaded.")
                         break
                     
-                # Increment section index
+                    
+                    time.sleep(2)
+                    
                 sec_idx += 1
-            
-            logger.info(f"Course: '{course.name}' was succeffully downloaded.")
             
     def download_video(self, driver, name: str, path: str) -> None:
         
         try:
             driver.find_element(By.ID, "overlayPlayButton").click()
         except:
-            pass
+            logger.exception(f"Lecture: '{name}' don't have play button!")
+            raise
             
-        time.sleep(1)
+        time.sleep(5)
+
 
         logs = driver.get_log("performance")
     
@@ -363,6 +329,8 @@ class Brain:
                     f.write(json.dumps(network_log)+",")
             f.write("{}]")
     
+        #print("Written json file")
+    
         # Read the JSON File and parse it using
         # json.loads() to find the urls containing images.
         json_file_path = "network_log.json"
@@ -379,8 +347,7 @@ class Brain:
                 # URL is present inside the following keys
                 url = log["params"]["request"]["url"]
                 
-                # Check if the 'master' and 'token' is presented in the URL
-                if "master" in url and "token" in url:
+                if "master" in url and "origin" in url and "token" in url:
                     m3u8_file = url
                     
             except Exception as e:
@@ -392,9 +359,12 @@ class Brain:
                     # "ffmpeg_location": "C:\\yt-dlp\\ffmpeg.exe", 
                     # "prefer_ffmpeg": True, 
                     "format": "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best"
-                    } 
+                    }
         
         logger.info(f"Start downloading lecture {name}")
         
         with YoutubeDL(ydl_opts) as ydl:
             ydl.download(m3u8_file)
+
+
+
