@@ -176,6 +176,7 @@ class Brain:
             section_name = section.find_element(By.CLASS_NAME, "SkillListItemHeaderHeading-sc-pqcd25-5").get_attribute('innerHTML')
             section_name = section_name[section_name.rfind('>')+1:].strip()
             section_name = get_rid_of_special_characters(section_name)
+            section_name = section_name.replace("&amp", "&")
             
             # Section index starts at 1
             section_idx += 1
@@ -192,6 +193,25 @@ class Brain:
                 lecture_name = lecture_name[lecture_name.rfind('>')+1:]
                 lecture_name = get_rid_of_special_characters(lecture_name)
                 lecture_name = lecture_name.replace("&amp", "&")
+                
+                # Make lecture name shorter
+                if len(lecture_name) > 40:
+                    if 'Introduction to' in lecture_name:
+                        lecture_name = lecture_name.replace('Introduction to', '').strip()
+                        lecture_name = lecture_name[:lecture_name.rfind('(')]
+                        
+                    if '(' in lecture_name:
+                        lecture_name = lecture_name[:lecture_name.rfind('(')].strip()
+                    
+                    if len(lecture_name) > 40:
+                        length_max = 40
+                        length_actual = 0
+                        lec_name = ''
+                        for word in lecture_name.split():
+                            length_actual += len(word)
+                            if length_actual < length_max:
+                                lec_name += word + ' '
+                        lecture_name = lec_name.strip()
                 
                 # Find lecture time
                 lecture_time_str = lecture.find_element(By.TAG_NAME, "div").get_attribute("innerHTML").replace('mins', 'min').strip().replace(' ', '')
