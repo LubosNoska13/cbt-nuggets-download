@@ -6,9 +6,10 @@ import json
 import time
 import os
 import re
-
 from src.logging_setup import logger
 from yt_dlp import YoutubeDL
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 class Brain:
     links_array = []
@@ -122,12 +123,22 @@ class Brain:
         logger.info(f"Logging into website: {log_in_link}")
         
         driver.get(log_in_link)
-        time.sleep(5)
         
-        driver.find_element(By.ID, "email").send_keys(credentails['email'])
         time.sleep(1)
+        WebDriverWait(driver, 13).until(
+            EC.visibility_of_element_located((By.ID, "email"))
+        )
+        driver.find_element(By.ID, "email").send_keys(credentails['email'])
+        
+        WebDriverWait(driver, 13).until(
+            EC.visibility_of_element_located((By.ID, "password"))
+        )
         driver.find_element(By.ID, "password").send_keys(credentails['password'])
-        time.sleep(2)
+        
+        WebDriverWait(driver, 13).until(
+            EC.visibility_of_element_located((By.CLASS_NAME, "login-button"))
+        )
+        time.sleep(1)
         driver.find_element(By.CLASS_NAME, "login-button").click()
         
         time.sleep(6)
@@ -325,14 +336,21 @@ class Brain:
                                 
                                 # Scroll to the lecture and click on it
                                 driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", lec_item)
-                                lec_click = lec_item.find_element(By.CLASS_NAME, "video-list-title")
+                                
                                 time.sleep(3)
-                                lec_click.click()
+                                WebDriverWait(driver, 13).until(
+                                    EC.element_to_be_clickable((By.CLASS_NAME, "video-list-title"))
+                                )
+                                lec_item.find_element(By.CLASS_NAME, "video-list-title").click()
+                                
                             
                             else:
                                 # Click on the play button
-                                time.sleep(1)
-                                driver.find_element(By.ID, "playButton").click()
+                                time.sleep(7)
+                                try:
+                                    driver.find_element(By.ID, "playButton").click()
+                                except:
+                                    pass
                             
                             # Scroll on the top of the website
                             time.sleep(3)
@@ -359,7 +377,7 @@ class Brain:
         except:
             pass
             
-        time.sleep(1)
+        time.sleep(2)
 
         logs = driver.get_log("performance")
     
