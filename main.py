@@ -25,7 +25,11 @@ def download_course():
         brain.get_html_information(driver=driver, link=link)
     
     brain.log_in_to_website(credentails=credentials, driver=driver)
-    brain.create_folder_and_download(driver=driver, link=link)
+    
+    try:
+        brain.create_folder_and_download(driver=driver, link=link)
+    finally:
+        driver.close()
     
     driver.quit()
 
